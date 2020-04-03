@@ -46,6 +46,7 @@ bool button(int *led_seq, int difficulty)
 
     while (i < difficulty)
     {
+        int ret;
         ret = gpiod_line_event_wait_bulk(&lines, &ts, &event_lines);
         if (ret < 0)
         {
@@ -62,9 +63,9 @@ bool button(int *led_seq, int difficulty)
 
         event_size=gpiod_line_bulk_num_lines(&event_lines);
 
-        for (j = 0; j < event_size; j++)
-        {
-            line = gpiod_line_bulk_get_line(&event_lines, j);
+        // for (j = 0; j < event_size; j++)
+        // {
+            line = gpiod_line_bulk_get_line(&event_lines, 0);
             if (ret < 0)
             {
                 perror("Reading event number failed!");
@@ -84,7 +85,7 @@ bool button(int *led_seq, int difficulty)
             ret-=3;
             printf("%d\n",ret);
 
-        }
+        //}
 
         i += event_size;
     }
