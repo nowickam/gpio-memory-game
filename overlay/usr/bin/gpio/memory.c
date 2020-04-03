@@ -10,11 +10,13 @@ int main(int argc, char **argv)
 	printf("MEMORY GAME\n");
 	int difficulty=3;
 	bool correct=true;
+	int* led_seq;
 
 	while(correct){
-		int* led_seq;
+		printf("WATCH %d SIGNALS \n",difficulty);
 		led_seq=led(difficulty);
-		correct=button(led_seq);
+		printf("YOUR TURN!\n");
+		correct=button(led_seq,difficulty);
 		difficulty++;
 
 		//TODO remove

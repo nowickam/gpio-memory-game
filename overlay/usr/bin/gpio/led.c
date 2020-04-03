@@ -33,10 +33,11 @@ int* led(int difficulty)
 	if (ret < 0) {
 		perror("Request line as output failed\n");
 		gpiod_line_release_bulk(&lines);
+		gpiod_chip_close(chip);
 		return NULL;
 	}
 
-	printf("LEVEL %d\n",difficulty);
+
 
 	for(i=0;i<difficulty;i++){
 		j=rand()%line_len;
@@ -47,6 +48,7 @@ int* led(int difficulty)
 		if (ret < 0) {
 			perror("Set line output failed\n");
 			gpiod_line_release_bulk(&lines);
+			gpiod_chip_close(chip);
 			return NULL;
 		}
 		sleep(1);
@@ -55,6 +57,7 @@ int* led(int difficulty)
 		if (ret < 0) {
 			perror("Set line output failed\n");
 			gpiod_line_release_bulk(&lines);
+			gpiod_chip_close(chip);
 			return NULL;
 		}
 
