@@ -1,0 +1,5 @@
+#!/bin/sh
+(
+export PATH=/home/nowickam/LINES/lab2/buildroot-2020.02/output/host/usr/bin:$PATH
+make ARCH=arm CROSS_COMPILE=arm-none-linux-gnueabihf-
+)
