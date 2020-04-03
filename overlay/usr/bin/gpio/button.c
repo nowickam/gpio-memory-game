@@ -11,17 +11,23 @@ bool button(int *led_seq, int difficulty)
     struct gpiod_line_bulk lines;
     struct gpiod_line_bulk event_lines;
     struct gpiod_line *line;
+    struct gpiod_line_event event;
     unsigned int event_size;
     unsigned int line_nums[] = {12, 13, 14, 15, 16, 17, 18, 19};
     unsigned int line_len = 8;
 
     struct timespec ts = {5, 0};
+    struct timespec t = {0, 0};
 
-    int* user=(int*)calloc(difficulty,sizeof(int));
-    if(user==NULL){
+    bool bnc_flag = false;
+    int bnc_count = 0;
+
+    int *user = (int *)calloc(difficulty, sizeof(int));
+    if (user == NULL)
+    {
         perror("Failed to allocate memory!");
         return NULL;
-	}
+    }
 
     chip = gpiod_chip_open_by_name(chipname);
     if (!chip)
@@ -72,35 +78,62 @@ bool button(int *led_seq, int difficulty)
             return false;
         }
 
-        event_size = gpiod_line_bulk_num_lines(&event_lines);
-        for (j = 0; j < event_size; j++)
+        line = gpiod_line_bulk_get_line(&event_lines, 0);
+        if (ret < 0)
         {
-            line = gpiod_line_bulk_get_line(&event_lines, j);
-            if (ret < 0)
-            {
-                perror("Reading event number failed!");
-                gpiod_line_release_bulk(&lines);
-                gpiod_chip_close(chip);
-                free(user);
-                free(led_seq);
-                return NULL;
-            }
-
-            ret = gpiod_line_event_get_fd(line);
-            if (ret < 0)
-            {
-                perror("Read last event notification failed\n");
-                gpiod_line_release_bulk(&lines);
-                gpiod_chip_close(chip);
-                free(user);
-                free(led_seq);
-                return NULL;
-            }
-            ret -= 3;
-            user[i]=ret;
+            perror("Reading event number failed!");
+            gpiod_line_release_bulk(&lines);
+            gpiod_chip_close(chip);
+            free(user);
+            free(led_seq);
+            return NULL;
         }
 
-        if(user[i]!=led_seq[i]){
+        ret = gpiod_line_event_read(line, &event);
+        if (ret < 0)
+        {
+            perror("Read last event notification failed\n");
+            gpiod_line_release_bulk(&lines);
+            gpiod_chip_close(chip);
+            free(user);
+            free(led_seq);
+            return NULL;
+        }
+
+        ret = gpiod_line_event_get_fd(line);
+        if (ret < 0)
+        {
+            perror("Read last event notification failed\n");
+            gpiod_line_release_bulk(&lines);
+            gpiod_chip_close(chip);
+            free(user);
+            free(led_seq);
+            return NULL;
+        }
+
+        // bouncing
+        if (event.ts.tv_sec - t.tv_sec <= 1 && i != 0)
+        {
+            if (event.ts.tv_nsec - t.tv_nsec < 3e+8)
+            {
+                bnc_count++;
+            }
+            else
+                bnc_count = 0;
+        }
+        else
+            bnc_count = 0;
+
+        if (bnc_count < 1)
+        {
+            ret -= 3;
+            user[i] = ret;
+        }
+        t.tv_sec = event.ts.tv_sec;
+        t.tv_nsec = event.ts.tv_nsec;
+
+        if (user[i] != led_seq[i] && bnc_count < 1)
+        {
             gpiod_line_release_bulk(&lines);
             gpiod_chip_close(chip);
             free(user);
@@ -108,7 +141,8 @@ bool button(int *led_seq, int difficulty)
             return false;
         }
 
-        i += event_size;
+        if (bnc_count < 1)
+            i++;
         gpiod_line_release_bulk(&lines);
     }
 

@@ -15,10 +15,6 @@ int main(int argc, char **argv)
 	while(correct){
 		printf("LEVEL %d \n",difficulty);
 		led_seq=led(difficulty);
-
-		for(int i=0;i<difficulty;i++){
-			printf("%d ",led_seq[i]);
-		}
 		
 		printf("YOUR TURN!\n");
 		correct=button(led_seq,difficulty);
@@ -26,7 +22,7 @@ int main(int argc, char **argv)
 			printf("MISTAKE!\n");
 			break;
 		}
-		printf("CORRECT!\n\n");
+		printf("CORRECT!\n");
 		difficulty++;
 	}
 
