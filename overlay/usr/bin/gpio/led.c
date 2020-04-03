@@ -12,8 +12,13 @@ int* led(int difficulty)
 	struct gpiod_line_bulk lines;
 	unsigned int line_nums[]={24,25,26,27,28,29,30,31};
 	unsigned int line_len=8;
-	int vals[]={0,0,0,0,0,0,0,0};
+	int vals[8]={0};
+
 	int* led_seq=(int*)calloc(difficulty,sizeof(int));
+	if(led_seq==NULL){
+		perror("Failed to allocate memory!");
+		return NULL;
+	}
 
 	chip = gpiod_chip_open_by_name(chipname);
 	if (!chip) {
@@ -40,9 +45,9 @@ int* led(int difficulty)
 
 
 	for(i=0;i<difficulty;i++){
-		j=rand()%line_len;
+		j=(int)(rand()%line_len);
 		vals[j]=1;
-		led_seq[i]=j;
+		led_seq[i]=j+1;
 
 		ret = gpiod_line_set_value_bulk(&lines, vals);
 		if (ret < 0) {
@@ -67,6 +72,5 @@ int* led(int difficulty)
 
 	gpiod_line_release_bulk(&lines);
 	gpiod_chip_close(chip);
-	free(led_seq);
 	return led_seq;
 }
