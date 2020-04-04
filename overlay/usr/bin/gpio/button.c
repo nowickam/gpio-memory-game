@@ -17,9 +17,10 @@ bool button(int *led_seq, int difficulty)
     unsigned int line_len = 8;
 
     struct timespec ts = {5, 0};
-    struct timespec t = {0, 0};
+    struct timespec prev = {0, 0};
 
-    bool bnc_flag = false;
+    long ns_diff;
+    int s_diff;
     int bnc_count = 0;
 
     int *user = (int *)calloc(difficulty, sizeof(int));
@@ -112,9 +113,12 @@ bool button(int *led_seq, int difficulty)
         }
 
         // bouncing
-        if (event.ts.tv_sec - t.tv_sec <= 1 && i != 0)
+        s_diff=event.ts.tv_sec - prev.tv_sec;
+        printf("s: %d\n",s_diff);
+        if (event.ts.tv_sec - prev.tv_sec <= 1 && i != 0)
         {
-            if (event.ts.tv_nsec - t.tv_nsec < 3e+8)
+
+            if (event.ts.tv_nsec - prev.tv_nsec < 3e+8)
             {
                 bnc_count++;
             }
@@ -129,8 +133,8 @@ bool button(int *led_seq, int difficulty)
             ret -= 3;
             user[i] = ret;
         }
-        t.tv_sec = event.ts.tv_sec;
-        t.tv_nsec = event.ts.tv_nsec;
+        prev.tv_sec = event.ts.tv_sec;
+        prev.tv_nsec = event.ts.tv_nsec;
 
         if (user[i] != led_seq[i] && bnc_count < 1)
         {
