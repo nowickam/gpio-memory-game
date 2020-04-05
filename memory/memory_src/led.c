@@ -10,9 +10,9 @@ int* led(int difficulty)
 	int i, j, ret;
 
 	struct gpiod_line_bulk lines;
-	unsigned int line_nums[]={24,25,26,27,28,29,30,31};
-	unsigned int line_len=8;
-	int vals[8]={0};
+	unsigned int line_nums[]={24,25,26,27};
+	unsigned int line_len=4;
+	int vals[4]={0};
 
 	int* led_seq=(int*)calloc(difficulty,sizeof(int));
 	if(led_seq==NULL){

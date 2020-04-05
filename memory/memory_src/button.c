@@ -13,11 +13,11 @@ bool button(int *led_seq, int difficulty)
     struct gpiod_line *line;
     struct gpiod_line_event event;
     unsigned int event_size;
-    unsigned int line_nums[] = {12, 13, 14, 15, 16, 17, 18, 19};
-    unsigned int line_len = 8;
+    unsigned int line_nums[] = {12, 13, 14, 15};
+    unsigned int line_len = 4;
 
     struct timespec ts = {5, 0};
-    struct timespec prev = {0, 0};
+    struct timespec tbnc = {0, 3e+08};
 
     long ns_diff;
     int s_diff;
@@ -79,21 +79,36 @@ bool button(int *led_seq, int difficulty)
             return false;
         }
 
+        //bouncing
+        do
+        {
+            gpiod_line_release_bulk(&lines);
+            ret = gpiod_line_request_bulk_falling_edge_events(&lines, "button_click");
+            if (ret < 0)
+            {
+                perror("Request falling edge event failed!\n");
+                gpiod_line_release_bulk(&lines);
+                gpiod_chip_close(chip);
+                free(user);
+                free(led_seq);
+                return NULL;
+            }
+            ret = gpiod_line_event_wait_bulk(&lines, &tbnc, NULL);
+            if (ret < 0)
+            {
+                perror("Wait failed!");
+                gpiod_line_release_bulk(&lines);
+                gpiod_chip_close(chip);
+                free(user);
+                free(led_seq);
+                return NULL;
+            }
+        } while (ret != 0);
+
         line = gpiod_line_bulk_get_line(&event_lines, 0);
         if (ret < 0)
         {
             perror("Reading event number failed!");
-            gpiod_line_release_bulk(&lines);
-            gpiod_chip_close(chip);
-            free(user);
-            free(led_seq);
-            return NULL;
-        }
-
-        ret = gpiod_line_event_read(line, &event);
-        if (ret < 0)
-        {
-            perror("Read last event notification failed\n");
             gpiod_line_release_bulk(&lines);
             gpiod_chip_close(chip);
             free(user);
@@ -112,31 +127,10 @@ bool button(int *led_seq, int difficulty)
             return NULL;
         }
 
-        // bouncing
-        s_diff=event.ts.tv_sec - prev.tv_sec;
-        printf("s: %d\n",s_diff);
-        if (event.ts.tv_sec - prev.tv_sec <= 1 && i != 0)
-        {
+        ret -= 3;
+        user[i] = ret;
 
-            if (event.ts.tv_nsec - prev.tv_nsec < 3e+8)
-            {
-                bnc_count++;
-            }
-            else
-                bnc_count = 0;
-        }
-        else
-            bnc_count = 0;
-
-        if (bnc_count < 1)
-        {
-            ret -= 3;
-            user[i] = ret;
-        }
-        prev.tv_sec = event.ts.tv_sec;
-        prev.tv_nsec = event.ts.tv_nsec;
-
-        if (user[i] != led_seq[i] && bnc_count < 1)
+        if (user[i] != led_seq[i] )
         {
             gpiod_line_release_bulk(&lines);
             gpiod_chip_close(chip);
@@ -145,8 +139,7 @@ bool button(int *led_seq, int difficulty)
             return false;
         }
 
-        if (bnc_count < 1)
-            i++;
+        i++;
         gpiod_line_release_bulk(&lines);
     }
 

@@ -1,5 +1,0 @@
-#!/bin/bash
-(
-  cd buildroot-2020.02
-  make
-)

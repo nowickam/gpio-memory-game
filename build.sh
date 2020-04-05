@@ -12,10 +12,12 @@ if [ ! -f ${BR_DL} ] || ! ( bzip2 -q -t ${BR_DL}); then
 fi
 tar -xjf ${BR_DL}
 cp BR_config ${BR_NAME}/.config
-cd buildroot-2020.02
+cp Config.in ${BR_NAME}/package/Config.in
+cp -r memory ${BR_NAME}/package
+rm -rf ${BR_NAME}/output/build/memory-1.0
+
+cd ${BR_NAME}
 for i in ../patches/* ; do
    patch -p1 < $i
 done
 make
-
-

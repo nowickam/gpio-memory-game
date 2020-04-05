@@ -118,7 +118,7 @@ class SwitchBoardWindow(Gtk.Window):
         label = Gtk.Label(label = "Push the right buttons")
         mainvbox.pack_start(label,True,True,0)
         hbox = Gtk.Box(spacing=6)
-        for i in range(12,20):
+        for i in range(12,16):
             button = MyButton(i)
             button.connect("button-press-event", self.on_button_clicked,0)
             button.connect("button-release-event", self.on_button_clicked,1)
@@ -129,7 +129,7 @@ class SwitchBoardWindow(Gtk.Window):
         label = Gtk.Label(label = "Follow the lights")
         mainvbox.pack_start(label,True,True,0)
         hbox = Gtk.Box(spacing=6)
-        for i in range(24,32):
+        for i in range(24,28):
             led = MyLed(i)
             MyControls[i] = led
             hbox.pack_start(led,True,True,0)            
